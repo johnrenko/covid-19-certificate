@@ -10,7 +10,7 @@
             padding: 20px;
         }
 
-        h4, form, footer {
+        h4, form, footer, #alert-print {
             margin: 30px auto;
             max-width: 400px;
         }
@@ -44,6 +44,10 @@
             left: 20px;
             right: 20px;
         }
+
+        #alert-print {
+            margin: 1rem auto 0;
+        }
     </style>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css">
@@ -51,15 +55,22 @@
 <body>
     <h4>COVID-19 – Générateur d'attestation de déplacement</h4>
 
+    <div class="alert alert-danger" role="alert" id="alert-print">
+        <small>
+            🚨 Les attestations numériques
+            <a href="https://twitter.com/Place_Beauvau/status/1240236276416118784">ne sont plus autorisées</a>,
+            vous pouvez utiliser ce générateur mais vous serez malheureusement obligés d'imprimer.
+        </small>
+    </div>
+
     <form id="form-profile" style="display: none">
         <div class="alert alert-primary" role="alert">
             <small>
-                Ce générateur est là pour faciliter l'usage des attestations. Les données sont stockées
-                <u>exclusivement</u> sur votre téléphone et le code peut être consulté
-                <a href="https://github.com/nesk/covid-19-certificate">sur Github</a>. Nul besoin
-                d'imprimer, <a href="https://twitter.com/design_gouv/status/1240177567434489856">les attestations
-                numériques sont autorisées.</a>
-                <br><br>
+                <p>
+                    Ce générateur est là pour faciliter l'usage des attestations. Les données sont stockées
+                    <u>exclusivement</u> sur votre téléphone et le code peut être consulté
+                    <a href="https://github.com/nesk/covid-19-certificate">sur Github</a>.
+                </p>
                 <a href="https://www.interieur.gouv.fr/Actualites/L-actu-du-Ministere/Attestation-de-deplacement-derogatoire-et-justificatif-de-deplacement-professionnel">
                     Plus d'informations sur le site officiel du gouvernement.
                 </a>
