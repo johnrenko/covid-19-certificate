@@ -26,7 +26,7 @@ function getProfile() {
 }
 
 async function generatePdf(profile, reason) {
-  const url = 'certificate.pdf'
+  const url = 'certificate.pdf?v=bfc885e5326a9e0d3184aed9d183bca20a9cd76f'
   const existingPdfBytes = await fetch(url).then(res => res.arrayBuffer())
 
   const pdfDoc = await PDFDocument.load(existingPdfBytes)
@@ -37,40 +37,59 @@ async function generatePdf(profile, reason) {
     page.drawText(text, {x, y, size, font})
   }
 
-  drawText(profile.name, 135, 622)
-  drawText(profile.birthday, 135, 593)
-  drawText(profile.address, 135, 559)
-  drawText(`${profile.zipcode} ${profile.town}`, 135, 544)
+  drawText(profile.name, 125, 685)
+  drawText(profile.birthday, 125, 661)
+  drawText(profile.birthplace || '', 95, 637)
+  drawText(`${profile.address} ${profile.zipcode} ${profile.town}`, 140, 613)
 
   switch (reason) {
     case 'work':
-      drawText('x', 51, 425, 17)
+      drawText('x', 76.5, 526, 20)
       break
     case 'groceries':
-      drawText('x', 51, 350, 17)
+      drawText('x', 76.5, 476.5, 20)
       break
     case 'health':
-      drawText('x', 51, 305, 17)
+      drawText('x', 76.5, 436, 20)
       break
     case 'family':
-      drawText('x', 51, 274, 17)
+      drawText('x', 76.5, 399.5, 20)
       break
     case 'sport':
-      drawText('x', 51, 229, 17)
+      drawText('x', 76.5, 344, 20)
+      break
+    case 'notification':
+      drawText('x', 76.5, 297, 20)
+      break
+    case 'mission':
+      drawText('x', 76.5, 261, 20)
       break
   }
 
-  drawText(profile['done-at'] || profile.town, 375, 140)
-  drawText(String((new Date).getDate()), 478, 140)
-  drawText(String((new Date).getMonth() + 1).padStart(2, '0'), 502, 140)
+  drawText(profile['done-at'] || profile.town, 110, 225)
+
+  if (reason !== '') {
+    const date = [
+      String((new Date).getDate()).padStart(2, '0'),
+      String((new Date).getMonth() + 1).padStart(2, '0'),
+      String((new Date).getFullYear()),
+    ].join('/')
+
+    drawText(date, 105, 201)
+    drawText(String((new Date).getHours()).padStart(2, '0'), 195, 201)
+
+    // Round the minutes to the lower X0 or X5 value, so it feels more human.
+    const minutes = Math.floor((new Date).getMinutes() / 5) * 5;
+    drawText(String(minutes).padStart(2, '0'), 225, 201)
+  }
 
   const signatureArrayBuffer = await fetch(profile.signature).then(res => res.arrayBuffer())
   const signatureImage = await pdfDoc.embedPng(signatureArrayBuffer)
-  const signatureDimensions = signatureImage.scale(1 / (signatureImage.width / 150))
+  const signatureDimensions = signatureImage.scale(1 / (signatureImage.width / 80))
 
   page.drawImage(signatureImage, {
-    x: page.getWidth() - signatureDimensions.width - 100,
-    y: 30,
+    x: page.getWidth() - signatureDimensions.width - 380,
+    y: 130,
     width: signatureDimensions.width,
     height: signatureDimensions.height,
   })
@@ -102,10 +121,6 @@ function restoreReason() {
   $(`#radio-${value}`).checked = true
 }
 
-function isIos() {
-  return Boolean(navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform));
-}
-
 // see: https://stackoverflow.com/a/32348687/1513045
 function isFacebookBrowser() {
   const ua = navigator.userAgent || navigator.vendor || window.opera
@@ -134,10 +149,9 @@ $('#form-profile').addEventListener('submit', event => {
   location.reload()
 })
 
-// We do not want to use a date field on Android, they're unusable, target only iOS devices.
-if (isIos()) {
-  $('#field-birthday').type = 'date'
-}
+$('#date-selector').addEventListener('change', ({ target }) => {
+  $('#field-birthday').value = target.value.split('-').reverse().join('/')
+})
 
 $('#check-same-town').addEventListener('change', applyDoneAt)
 applyDoneAt()
@@ -150,8 +164,28 @@ $('#reset-signature').addEventListener('click', () => signaturePad.clear())
 
 $('#form-generate').addEventListener('submit', async event => {
   event.preventDefault()
+
+  const button = event.target.querySelector('button[type=submit]')
+  button.disabled = true
+
   const reason = getAndSaveReason()
-  const pdfBlob = await generatePdf(getProfile(), reason)
+  const profile = getProfile()
+
+  if (profile.birthplace === undefined) {
+    const birthplace = prompt([
+      `La nouvelle attestation, en date du 25 mars, exige maintenant le lieu de naissance et votre profil ne contient`,
+      `actuellement pas cette information, merci de compléter :`,
+    ].join(' '))
+
+    if (birthplace) {
+      profile.birthplace = birthplace
+      localStorage.setItem('birthplace', birthplace)
+    }
+  }
+
+  const pdfBlob = await generatePdf(profile, reason)
+  button.disabled = false
+
   downloadBlob(pdfBlob, 'attestation.pdf')
 })
 
